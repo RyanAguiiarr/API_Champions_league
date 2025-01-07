@@ -1,5 +1,7 @@
-import { findAllPlayers, findPlayerById } from "../repositories/players-repository"
-import { noContent, ok } from "../utils/http-helper"
+import { playerModel } from "../models/player-model"
+import { statisticsModel } from "../models/statistics-model"
+import { deleteOnePlayer, findAllPlayers, findAndModifyPlayer, findPlayerById, insertPlayer } from "../repositories/players-repository"
+import { badRequest, created, noContent, ok } from "../utils/http-helper"
 
 export const getPlayerService = async ()=>{
     const data = await findAllPlayers()
@@ -8,7 +10,7 @@ export const getPlayerService = async ()=>{
     if(data){
         response = await ok(data)
     }else{
-        response = await noContent(data)
+        response = await noContent()
     }
 
     return response
@@ -19,10 +21,53 @@ export const getPlayerByIdService = async (id: number) => {
     let response = null
     
     if(data){
-        response = ok(data)
+        response = await ok(data)
     }else{
-        response = noContent(data)
+        response = await noContent()
     }
 
     return response
 }
+
+export const createPlayerService = async (player: playerModel) => {
+
+    let response = null
+    
+    if(Object.keys(player).length !== 0){
+        response = await insertPlayer(player)
+        response = created()
+    }else{
+        response = badRequest()
+    }
+
+    return response
+}
+
+export const deletePlayerService = async (id: number) => {
+    let response = null
+    const isDeleted = await deleteOnePlayer(id)
+
+    if(isDeleted){
+        response = await ok({
+            message: "deletado."
+        })
+    }else{
+        response = await badRequest()
+    }
+
+    
+    return response
+}
+
+export const updatePlayerService = async (id: number, statistics: statisticsModel) => {
+    const data = await findAndModifyPlayer(id, statistics)
+    let response = null
+    if(Object.keys(data).length === 0){
+        response = await badRequest()
+    }else{
+        response = await ok(data)
+    }
+    
+    return response
+}
+
